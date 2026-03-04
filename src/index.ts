@@ -6,6 +6,12 @@ import { PrimeVaultInfoEntry } from "./types.ts";
 
 const wikiaVaultURL = "https://wiki.warframe.com/w/Prime_Vault";
 const wikiaVaultPage = await fetch(wikiaVaultURL).then((res) => res.text());
+const wikiaVaultHash = encodeHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(wikiaVaultPage)));
+const oldHash = JSON.parse(Deno.readTextFileSync("data/hash.json")).hash;
+if (wikiaVaultHash === oldHash) {
+  console.log("Wikia vault page has not changed since the last run. No need to update the vault state.");
+  Deno.exit(0);
+}
 const wikiaVaultDocument = new DOMParser().parseFromString(wikiaVaultPage, "text/html");
 
 // Scince data attributes are generated dynamically, we cannot rely on them to find the tables containing vaulted items.
