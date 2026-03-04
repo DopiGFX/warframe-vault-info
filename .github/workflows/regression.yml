@@ -1,0 +1,39 @@
+name: Regression
+on: 
+  schedule:
+    - cron: '55 11,23 * * *'
+  push:
+    branches:
+      - main
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: lts
+      - name: Run
+        run: deno run fetch
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git add data/hash.json data/vaultstate.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Commit & Push if changed
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "Actions Bot"
+          git config user.email "actions-bot@users.noreply.github.com"
+          git commit -m "Update VaultState and Hash data"
+          git push
