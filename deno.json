@@ -1,0 +1,23 @@
+{
+  "tasks": {
+    "fetch": "deno run -P src/index.ts",
+    "dev": "deno run --watch -P src/index.ts"
+  },
+  "permissions": {
+    "default": {
+      "net": true,
+      "env": true,
+      "read": true,
+      "sys": true,
+      "write": [
+        "data"
+      ]
+    }
+  },
+  "imports": {
+    "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.56",
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/encoding": "jsr:@std/encoding@^1.0.10",
+    "@wfcd/items": "npm:@wfcd/items@^1.1272.130"
+  }
+}
