@@ -18,9 +18,10 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: lts
+      - name: Install dependencies
+        run: deno i npm:@wfcd/items@latest
       - name: Run
         run: deno run fetch
-
       - name: Check for changes
         id: changes
         run: |
