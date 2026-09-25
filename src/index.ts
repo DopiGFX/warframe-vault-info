@@ -46,10 +46,10 @@ function extractItemName(row: Element, category: TableCategory) {
     return;
   }
 
+  const plainTextName = firstCell.querySelector("*") ? "" : firstCell.textContent?.trim() ?? "";
   const name = firstCell.querySelector("span[data-param-name]")?.getAttribute("data-param-name")
     ?? firstCell.querySelector("a")?.textContent?.trim()
-    ?? firstCell.textContent?.trim()
-    ?? "";
+    ?? plainTextName;
 
   if (!name) {
     logUnparsableRow(category, "missing item name", row);
