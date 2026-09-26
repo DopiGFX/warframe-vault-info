@@ -20,78 +20,42 @@ if (!vaultedItems || !formerlyVaulted || !notYetVaulted || !neverVaulted) {
   throw new Error("Could not find the tables containing vaulted items.");
 }
 
-const unmappedEntries: Omit<PrimeVaultInfoEntry, "uniqueName">[] = [];
-
-type TableCategory = "vaulted" | "formerly vaulted" | "not yet vaulted" | "never vaulted";
-
-function summarizeCellText(text: string | null | undefined) {
-  return text?.replace(/\s+/g, " ").trim() || "<empty>";
-}
-
-function logUnparsableRow(category: TableCategory, reason: string, row: Element) {
-  const rowText = summarizeCellText(row.textContent);
-  const rowHtml = summarizeCellText(row.outerHTML);
-  console.warn(`[prime-vault parser] Skipping ${category} row: ${reason}.`, { text: rowText, html: rowHtml });
-}
-
-function extractItemName(row: Element, category: TableCategory) {
+function extractVaultedItems(row: Element) {
   // For some reason, the first row of each table contains the column headers
   if (row.querySelector("th")) {
     return;
   }
-
-  const firstCell = row.querySelector("td:first-child");
-  if (!firstCell) {
-    logUnparsableRow(category, "missing first cell", row);
-    return;
+  const name = row.querySelector("td:nth-child(1) > span")?.getAttribute("data-param-name") ?? row.querySelector("td:nth-child(1) > a")?.textContent?.trim();
+  const vaultDate = row.querySelector("td:nth-child(2)")?.textContent?.trim() ?? "";
+  if (!name || !vaultDate) {
+    throw new Error("Could not extract name or vault date for a vaulted item.");
   }
-
-  const name = firstCell.querySelector("span[data-param-name]")?.getAttribute("data-param-name")
-    ?? firstCell.querySelector("a")?.textContent?.trim()
-    ?? firstCell.textContent?.trim()
-    ?? "";
-
-  if (!name) {
-    logUnparsableRow(category, "missing item name", row);
-    return;
-  }
-
-  return name;
-}
-
-function extractVaultedItems(row: Element, category: TableCategory) {
-  const name = extractItemName(row, category);
-  if (!name) {
-    return;
-  }
-
-  const vaultDate = row.querySelector("td:nth-child(2)")?.textContent?.trim();
-  if (!vaultDate) {
-    logUnparsableRow(category, `missing vault date for ${name}`, row);
-    return;
-  }
-
   unmappedEntries.push({ name, vaulted: true, vaultDate });
 }
 
-function extractNotVaultedItems(row: Element, category: TableCategory) {
-  const name = extractItemName(row, category);
-  if (!name) {
+function extractNotVaultedItems(row: Element) {
+  // For some reason, the first row of each table contains the column headers
+  if (row.querySelector("th")) {
     return;
   }
-
+  const name = row.querySelector("td:nth-child(1) > span")?.getAttribute("data-param-name") ?? row.querySelector("td:nth-child(1) > a")?.textContent?.trim();
+  if (!name) {
+    throw new Error("Could not extract name for a not yet vaulted item.");
+  }
   unmappedEntries.push({ name, vaulted: false });
 }
+
+const unmappedEntries: Omit<PrimeVaultInfoEntry, "uniqueName">[] = [];
 
 // We want this items to be listed as vaulted, but they are not listed on the wiki page
 unmappedEntries.push({ name: "Excalibur Prime", vaulted: true });
 unmappedEntries.push({ name: "Lato Prime", vaulted: true });
 unmappedEntries.push({ name: "Skana Prime", vaulted: true });
 
-vaultedItems.querySelectorAll("tbody > tr").forEach((row) => extractVaultedItems(row, "vaulted"));
-formerlyVaulted.querySelectorAll("tbody > tr").forEach((row) => extractVaultedItems(row, "formerly vaulted"));
-notYetVaulted.querySelectorAll("tbody > tr").forEach((row) => extractNotVaultedItems(row, "not yet vaulted"));
-neverVaulted.querySelectorAll("tbody > tr").forEach((row) => extractNotVaultedItems(row, "never vaulted"));
+vaultedItems.querySelectorAll("tbody > tr").forEach(extractVaultedItems);
+formerlyVaulted.querySelectorAll("tbody > tr").forEach(extractVaultedItems);
+notYetVaulted.querySelectorAll("tbody > tr").forEach(extractNotVaultedItems);
+neverVaulted.querySelectorAll("tbody > tr").forEach(extractNotVaultedItems);
 
 const primes = new Items().filter(a => a.name.includes("Prime"));
 
