@@ -98,7 +98,7 @@ console.info("[prime-vault parser] Parsed vault rows.", {
   formerlyVaulted: formerlyVaulted.querySelectorAll("tbody > tr").length,
   notYetVaulted: notYetVaulted.querySelectorAll("tbody > tr").length,
   neverVaulted: neverVaulted.querySelectorAll("tbody > tr").length,
-  extractedEntries: unmappedEntries.length,
+  parsedEntries: unmappedEntries.length,
 });
 
 const primes = new Items().filter(a => a.name.includes("Prime"));
