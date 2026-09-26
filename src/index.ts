@@ -102,7 +102,8 @@ console.info("[prime-vault parser] Parsed vault rows.", {
 });
 
 const primes = new Items().filter(a => a.name.includes("Prime"));
-const missingEntries = unmappedEntries.filter((entry) => !primes.some((item) => item.name === entry.name));
+const primesByName = new Map(primes.map((item) => [item.name, item]));
+const missingEntries = unmappedEntries.filter((entry) => !primesByName.has(entry.name));
 if (missingEntries.length > 0) {
   console.error("[prime-vault parser] Failed to map parsed names to wfcd/items Prime inventory.", {
     totalParsed: unmappedEntries.length,
@@ -112,7 +113,7 @@ if (missingEntries.length > 0) {
   throw new Error(`Could not map ${missingEntries.length} parsed item(s) to the items database.`);
 }
 const mappedEntries: PrimeVaultInfoEntry[] = unmappedEntries.map((entry) => {
-  const item = primes.find((item) => item.name === entry.name)!;
+  const item = primesByName.get(entry.name)!;
   return { uniqueName: item.uniqueName, ...entry };
 });
 
