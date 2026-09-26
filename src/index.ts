@@ -8,8 +8,9 @@ const wikiaVaultURL = "https://wiki.warframe.com/w/Prime_Vault";
 const wikiaVaultPage = await fetch(wikiaVaultURL).then((res) => res.text());
 const wikiaVaultHash = encodeHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(wikiaVaultPage)));
 const oldHash = JSON.parse(Deno.readTextFileSync("data/hash.json")).hash;
+console.info("[prime-vault parser] Downloaded Prime Vault page.", { url: wikiaVaultURL, hash: wikiaVaultHash });
 if (wikiaVaultHash === oldHash) {
-  console.log("Wikia vault page has not changed since the last run. No need to update the vault state.");
+  console.info("[prime-vault parser] Wikia vault page has not changed since the last run. No need to update the vault state.");
   Deno.exit(0);
 }
 const wikiaVaultDocument = new DOMParser().parseFromString(wikiaVaultPage, "text/html");
@@ -46,8 +47,8 @@ function extractItemName(row: Element, category: TableCategory) {
     return;
   }
 
-  const name = firstCell.querySelector("span[data-param-name]")?.getAttribute("data-param-name")
-    ?? firstCell.querySelector("a")?.textContent?.trim()
+  const name = firstCell.querySelector("a")?.textContent?.trim()
+    ?? firstCell.querySelector("span[data-param-name]")?.getAttribute("data-param-name")
     ?? firstCell.textContent?.trim()
     ?? "";
 
@@ -92,14 +93,27 @@ vaultedItems.querySelectorAll("tbody > tr").forEach((row) => extractVaultedItems
 formerlyVaulted.querySelectorAll("tbody > tr").forEach((row) => extractVaultedItems(row, "formerly vaulted"));
 notYetVaulted.querySelectorAll("tbody > tr").forEach((row) => extractNotVaultedItems(row, "not yet vaulted"));
 neverVaulted.querySelectorAll("tbody > tr").forEach((row) => extractNotVaultedItems(row, "never vaulted"));
+console.info("[prime-vault parser] Parsed vault rows.", {
+  vaulted: vaultedItems.querySelectorAll("tbody > tr").length,
+  formerlyVaulted: formerlyVaulted.querySelectorAll("tbody > tr").length,
+  notYetVaulted: notYetVaulted.querySelectorAll("tbody > tr").length,
+  neverVaulted: neverVaulted.querySelectorAll("tbody > tr").length,
+  parsedEntries: unmappedEntries.length,
+});
 
 const primes = new Items().filter(a => a.name.includes("Prime"));
-
+const primesByName = new Map(primes.map((item) => [item.name, item]));
+const missingEntries = unmappedEntries.filter((entry) => !primesByName.has(entry.name));
+if (missingEntries.length > 0) {
+  console.error("[prime-vault parser] Failed to map parsed names to wfcd/items Prime inventory.", {
+    totalParsed: unmappedEntries.length,
+    totalPrimesInDatabase: primes.length,
+    missingNames: missingEntries.map((entry) => entry.name),
+  });
+  throw new Error(`Could not map ${missingEntries.length} parsed item(s) to the items database.`);
+}
 const mappedEntries: PrimeVaultInfoEntry[] = unmappedEntries.map((entry) => {
-  const item = primes.find((item) => item.name === entry.name);
-  if (!item) {
-    throw new Error(`Could not find item with name ${entry.name} in the items database.`);
-  }
+  const item = primesByName.get(entry.name)!;
   return { uniqueName: item.uniqueName, ...entry };
 });
 
