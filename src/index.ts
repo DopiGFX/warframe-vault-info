@@ -29,10 +29,11 @@ function summarizeCellText(text: string | null | undefined) {
   return text?.replace(/\s+/g, " ").trim() || "<empty>";
 }
 
-function logUnparsableRow(category: TableCategory, reason: string, row: Element) {
+function failUnparsableRow(category: TableCategory, reason: string, row: Element): never {
   const rowText = summarizeCellText(row.textContent);
   const rowHtml = summarizeCellText(row.outerHTML);
-  console.warn(`[prime-vault parser] Skipping ${category} row: ${reason}.`, { text: rowText, html: rowHtml });
+  console.error(`[prime-vault parser] Failed to parse ${category} row: ${reason}.`, { text: rowText, html: rowHtml });
+  throw new Error(`Failed to parse ${category} row: ${reason}.`);
 }
 
 function extractItemName(row: Element, category: TableCategory) {
@@ -43,18 +44,19 @@ function extractItemName(row: Element, category: TableCategory) {
 
   const firstCell = row.querySelector("td:first-child");
   if (!firstCell) {
-    logUnparsableRow(category, "missing first cell", row);
-    return;
+    failUnparsableRow(category, "missing first cell", row);
   }
 
-  const name = firstCell.querySelector("a")?.textContent?.trim()
-    ?? firstCell.querySelector("span[data-param-name]")?.getAttribute("data-param-name")
+  // The first <a> is usually just the item's icon image and has no text, so it can't be used as-is.
+  const linkNames = Array.from(firstCell.querySelectorAll("a")).map((a) => a.textContent?.trim()).filter((text) => !!text);
+  // The wiki uses &nbsp; between words, which must be normalized to a regular space to match the items database.
+  const name = (linkNames[0]
+    ?? firstCell.querySelector("span[data-param-name]")?.getAttribute("data-param-name")?.trim()
     ?? firstCell.textContent?.trim()
-    ?? "";
+    ?? "").replace(/\s+/g, " ");
 
   if (!name) {
-    logUnparsableRow(category, "missing item name", row);
-    return;
+    failUnparsableRow(category, "missing item name", row);
   }
 
   return name;
@@ -68,8 +70,7 @@ function extractVaultedItems(row: Element, category: TableCategory) {
 
   const vaultDate = row.querySelector("td:nth-child(2)")?.textContent?.trim();
   if (!vaultDate) {
-    logUnparsableRow(category, `missing vault date for ${name}`, row);
-    return;
+    failUnparsableRow(category, `missing vault date for ${name}`, row);
   }
 
   unmappedEntries.push({ name, vaulted: true, vaultDate });

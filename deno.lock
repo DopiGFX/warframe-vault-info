@@ -12,7 +12,7 @@
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "npm:@wfcd/items@^1.1272.130": "1.1272.130_warframe-worldstate-data@3.7.1"
+    "npm:@wfcd/items@^1.1276.10": "1.1276.10_warframe-worldstate-data@3.16.10"
   },
   "jsr": {
     "@b-fuze/deno-dom@0.1.56": {
@@ -63,14 +63,14 @@
     }
   },
   "npm": {
-    "@wfcd/items@1.1272.130_warframe-worldstate-data@3.7.1": {
-      "integrity": "sha512-IJHOo36fCgDlUceegGqPOy3ICkWG29Jq2jY3uJxn2MGmUrGyaqLKA6AO1EqwswWi6W3J3A2TcaB29NbeS8hFLQ==",
+    "@wfcd/items@1.1276.10_warframe-worldstate-data@3.16.10": {
+      "integrity": "sha512-DSukUT8rAHCOFjY7u18GKnNC/zQWaiWMoYqo2Hr2Re2HkcRexLhbVLiGzqYHHdKb2i0rK6Y25VY8gpAxMBTUMA==",
       "dependencies": [
         "warframe-worldstate-data"
       ]
     },
-    "warframe-worldstate-data@3.7.1": {
-      "integrity": "sha512-Jz65/kbChucG+WpPolEhSVGr4US9s1EgrInADYG++B/daEND0wo1Q9YCaZIcXim+0OIuszPH/uQpONsqyqUk3Q=="
+    "warframe-worldstate-data@3.16.10": {
+      "integrity": "sha512-90Zok6LI4ZX3aWe7hk20tjXSijRutqeZHCfTUHWl2cW+mw/mqzhj6yhwK9LsZ0DFdIHcOAYslNWnlwJXR8DjiA=="
     }
   },
   "workspace": {
@@ -78,7 +78,7 @@
       "jsr:@b-fuze/deno-dom@~0.1.56",
       "jsr:@std/assert@1",
       "jsr:@std/encoding@^1.0.10",
-      "npm:@wfcd/items@^1.1272.130"
+      "npm:@wfcd/items@^1.1276.10"
     ]
   }
 }
